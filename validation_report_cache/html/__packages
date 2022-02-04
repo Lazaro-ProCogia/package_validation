@@ -1,0 +1,17 @@
+shiny
+shinydashboard
+riskmetric
+magrittr
+dplyr
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+stringr
+forcats
+prettydoc
+oysteR
+data.table
+DT

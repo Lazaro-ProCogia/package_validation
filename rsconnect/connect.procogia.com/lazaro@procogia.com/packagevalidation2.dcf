@@ -1,0 +1,13 @@
+name: packagevalidation2
+title: PackageValidation
+username: lazaro@procogia.com
+account: lazaro@procogia.com
+server: connect.procogia.com
+hostUrl: https://connect.procogia.com/__api__
+appId: 88
+bundleId: 38935
+url: https://connect.procogia.com/content/30b87dd4-f0ce-4860-ae09-a14bad5249a6/
+when: 1643916220.10411
+lastSyncTime: 1643916220.10411
+asMultiple: FALSE
+asStatic: FALSE

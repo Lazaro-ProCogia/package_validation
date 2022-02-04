@@ -1,0 +1,205 @@
+---
+title: "R Package validation Report"
+author: "Invanti Ticket Number(s): #18883"
+date: "Report generated: 02/01/2022"
+logo: knitr::image_uri(file.path(R.home("doc"), "html", "logo.jpg"))
+output: 
+  prettydoc::html_pretty:
+    theme: architect
+params:
+  snapshot_date: '2021-11-08'
+  pkg: !r c('longCatEDA', 'ggplot2')
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(riskmetric)
+library(magrittr)
+library(dplyr)
+library(tidyverse)
+library(prettydoc)
+library(dplyr)
+library(oysteR)
+require(data.table)
+
+package_list <- as.data.frame(c(params$pkg)) 
+package_list <- package_list %>% filter(!`c(params$pkg)` %in% 'ggplot2') %>%   
+  rename(name=`c(params$pkg)`)
+
+
+```
+
+
+
+## Packages contained in report
+
+`r package_list$name`
+
+
+```{r snapshot, cache=TRUE, include=FALSE}
+mran_url <- paste0('https://mran.revolutionanalytics.com/snapshot/', params$snapshot_date)
+
+
+
+
+mran_pkg <- available.packages(repos = mran_url)
+mran_pkg <- mran_pkg[rownames(mran_pkg) %in% params$pkg, c("Package","Version")]
+rownames(mran_pkg) <- NULL
+mran_pkg <- as.data.frame(mran_pkg)
+mran_pkg <- mran_pkg %>% filter(!Package == "ggplot2")
+
+db <- tools::CRAN_package_db()
+colnames(db)
+mdf <- data.frame(db[,1], db[,53])
+colnames(mdf) <- c("Package", "Title")
+
+tab1 <- left_join(mran_pkg, mdf, by = "Package")
+
+```
+
+
+### MRAN snapshot (`r params$snapshot_date`)
+
+```{r mransnap, echo=F}
+library(DT)
+datatable(tab1 %>% arrange(desc(Package)), 
+          rownames = TRUE,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = 0:1))
+            )
+          ) %>% 
+  formatStyle('Package', fontWeight = 'bold') 
+```
+
+
+### About
+
+The [`riskmetric`](https://github.com/pharmaR/riskmetric) package is a collection of risk metrics to evaluate the quality of R packages. The risk of using an R package is evaluated based on a number of metrics meant to evaluate development best practices, code documentation, community engagement and development sustainability. 
+
+The [`oysterR`](https://cran.r-project.org/web/packages/oysteR/index.html) package scans R packages with the 'OSS' Index provided by 'Sonatype' and reports any known vulnerabilities. 
+
+## `riskmetric` summary <img src="https://www.pharmar.org/img/carousel/pharmaRlogo_smaller.png" style="height: 75px; width:75px;"/>
+
+```{r riskmetric data prep, cache=TRUE, include=FALSE}
+package_tbl <- pkg_ref(c(params$pkg)) 
+
+pkg_report <- package_tbl %>%
+  pkg_assess() %>%
+  pkg_score() %>%
+  mutate(risk = summarize_scores(.))
+
+tab2 <- pkg_report  %>% rename(Package=package) %>% left_join(mdf) %>%
+  select(Package, has_website, has_bug_reports_url,has_source_control ,risk) %>% 
+  mutate(has_website = case_when(
+    has_website == 1 ~ "Yes", 
+    has_website == 0 ~ "No",
+  )) %>% 
+  mutate(has_source_control = case_when(
+    has_source_control == 1 ~ "Yes", 
+    has_source_control == 0 ~ "No",
+  )) %>% 
+   mutate(has_bug_reports_url = case_when(
+    has_bug_reports_url == 1 ~ "Yes", 
+    has_bug_reports_url == 0 ~ "No",
+  )) %>% 
+  mutate(risk = ifelse(risk < 0, 0, risk)) %>% 
+  mutate("Pass/Fail" = case_when(
+    risk < .60 ~ "Pass", 
+    risk > .59 ~ "Fail")) %>% 
+   mutate(risk = paste0(round(risk*100),"%")) %>% 
+  filter(!Package == "ggplot2")
+  
+
+colnames(tab2) <- c("Package", "Website", "URL Presence for Reporting", "Has Source Control?","Risk Score", "Pass/Fail")
+```
+
+```{r riskmetric dt, echo=FALSE}
+
+datatable(tab2, 
+          rownames = TRUE,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = 0:6,
+                                   scrollX='400px'))
+            )
+          ) %>% 
+  formatStyle('Package', fontWeight = 'bold') %>% 
+  formatStyle('Pass/Fail', fontWeight = 'bold') %>% 
+  formatStyle('Pass/Fail', 'Pass/Fail', color = styleEqual(c("Pass", "Fail"), c('green', 'red')))
+        
+          
+```
+
+
+## `oysteR` summary <img src="https://raw.githubusercontent.com/sonatype-nexus-community/oysteR/master/man/figures/logo.png" style="height: 75px; width:75px;"/>
+
+```{r oysteR dataprep, include=FALSE}
+audit = audit(pkg = c(tab1$Package),
+              version = c(tab1$Version),
+              type = "cran"
+              )
+
+tab3 <- tab2 %>% select(Package) %>% left_join(audit %>% rename(Package=package)) %>% 
+  select(Package, type, reference,no_of_vulnerabilities) %>% 
+  mutate(no_of_vulnerabilities = ifelse(is.na(no_of_vulnerabilities), 0 , no_of_vulnerabilities)) %>% 
+  rename(Vunerabilities = no_of_vulnerabilities) %>% 
+  mutate("Pass/Fail" = ifelse(Vunerabilities == 0, "Pass", "Fail"))
+names(tab3)[2] <- paste("Package Type")
+
+tab2 
+  
+tab3$Reference <- paste0("<a href='",tab3$reference,"' target='_blank'>","Link","</a>")
+tab3$reference <- NULL
+```
+
+
+```{r oysteR dt, echo=FALSE}
+datatable(tab3, escape = FALSE, rownames = TRUE,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = 0:4,
+                                   scrollX='400px'))
+            )
+          ) %>% 
+  formatStyle('Package', fontWeight = 'bold') %>% 
+  formatStyle('Pass/Fail', fontWeight = 'bold') %>% 
+  formatStyle('Pass/Fail', 'Pass/Fail', color = styleEqual(c("Pass", "Fail"), c('green', 'red')))
+        
+          
+
+```
+
+
+## Package Outcome 
+
+
+```{r final outcome data prep, include=FALSE}
+tab4 <- left_join(tab2 %>% rename(riskmetric_Outcome=`Pass/Fail`),
+                  tab3 %>% rename(osyteR_Outcome=`Pass/Fail`)) %>% 
+  
+  mutate(Holder = paste(riskmetric_Outcome, osyteR_Outcome)) %>% 
+  mutate(Outcome = 
+           case_when(Holder == "Pass Pass" ~ "Package safe to be Installed",
+                     Holder == "Fail Fail" ~ "Package is not safe to be Installed",
+                     Holder == "Fail Pass" ~ "Package will be installed with caution",
+                     Holder == "Pass Fail" ~ "Package will be installed with caution",
+                     )
+  ) %>% 
+  select(Package, riskmetric_Outcome, osyteR_Outcome,Outcome) 
+
+```
+
+```{r finaloutcome dt, echo=FALSE}
+datatable(tab4, escape = FALSE, rownames = TRUE,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = 0:4,
+                                   scrollX='400px'))
+            )
+          ) %>% 
+  formatStyle('Outcome', fontWeight = 'bold') %>% 
+  formatStyle('Package', fontWeight = 'bold') %>% 
+  formatStyle('Outcome', 'Outcome', color = styleEqual(c("Package safe to be Installed", 
+                                                         "Package is not safe to be Installed",
+                                                         "Package will be installed with caution",
+                                                         "Package will be installed with caution"), 
+                                                       c('green', 'red', 'orange','orange')))
+        
+```      

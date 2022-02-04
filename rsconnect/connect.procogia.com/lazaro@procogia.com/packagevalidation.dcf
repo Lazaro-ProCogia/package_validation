@@ -1,0 +1,14 @@
+name: packagevalidation
+title: PackageValidation
+username: lazaro@procogia.com
+account: lazaro@procogia.com
+server: connect.procogia.com
+hostUrl: https://connect.procogia.com/__api__
+appId: 87
+bundleId: 38931
+url: https://connect.procogia.com/content/ccd6825f-5485-4e6a-963a-642a5710e8fd/
+when: 1643916081.72996
+lastSyncTime: 1643916081.72996
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: markdown.docx|markdown.html|markdown.knit.md|markdown.Rmd|PckgValidationRqst_02.01.2022.html|PckgValidationRqst_1.28.2022.html|validation_laz.html|validation_laz.Rmd
