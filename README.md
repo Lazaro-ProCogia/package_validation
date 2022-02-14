@@ -14,11 +14,4 @@ The [`oysterR`](https://cran.r-project.org/web/packages/oysteR/index.html) packa
 
 ## Updates:
 
-2/4/2022
-Currently the app is not deployed as the following error is occuring during deployment
-
-```
-[Connect] Build error: An R package required by the content cannot be found in the package repository. (r-package-not-available)
-Application deployment failed with error: An R package required by the content cannot be found in the package repository. (r-package-not-available)
-```
-
+2/9/2022 - Application is deployed on RSConnect
