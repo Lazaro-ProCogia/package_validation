@@ -21,6 +21,9 @@ library(prettydoc)
 library(dplyr)
 library(oysteR)
 require(data.table)
+library(adjustedcranlogs)
+library(lubridate)
+library(ggplot2)
 
 package_list <- as.data.frame(c(params$pkg)) 
 package_list <- package_list %>% filter(!`c(params$pkg)` %in% 'ggplot2') %>%   
@@ -50,8 +53,8 @@ mran_pkg <- mran_pkg %>% filter(!Package == "ggplot2")
 
 db <- tools::CRAN_package_db()
 colnames(db)
-mdf <- data.frame(db[,1], db[,53])
-colnames(mdf) <- c("Package", "Title")
+mdf <- data.frame(db[,1], db[,53],db[,17])
+colnames(mdf) <- c("Package", "Description", "Author")
 
 tab1 <- left_join(mran_pkg, mdf, by = "Package")
 
@@ -69,6 +72,34 @@ datatable(tab1 %>% arrange(desc(Package)),
             )
           ) %>% 
   formatStyle('Package', fontWeight = 'bold') 
+```
+
+### Adjusted Total Downloads from CRAN
+
+`adjustedcranlogs` is a wrapper around the `cranlogs` package that removes CRAN-wide shared daily downloads and re-download/CRAN mirror spikes due to package updates.
+
+```{r echo=FALSE}
+mypkgdownloads = adj_cran_downloads(params$pkg,from = "2020-01-01" , to = Sys.Date())
+
+mypkgdownloads <- mypkgdownloads %>%
+mutate(month = format(date, "%m"), year = format(date, "%Y"))  
+
+
+year_tab <- mypkgdownloads %>% select(year, package, adjusted_total_downloads) %>% 
+  filter(!package %in% 'ggplot2') %>%
+  pivot_wider(names_from = package, values_from = adjusted_total_downloads, values_fn=sum)
+
+
+datatable(year_tab, 
+          rownames = TRUE,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all", 
+                                   scrollX='400px',
+                                   rownames= FALSE))
+            )
+          )
+
+#mypkgdownloads %>% filter(package == "ggplot2") %>% group_by(year) %>% summarise(sum=sum(adjusted_total_downloads))
 ```
 
 

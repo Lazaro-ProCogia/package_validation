@@ -15,3 +15,14 @@ prettydoc
 oysteR
 data.table
 DT
+base
+boot
+lattice
+survival
+Formula
+Hmisc
+clustMixType
+cranlogs
+rvest
+lubridate
+adjustedcranlogs

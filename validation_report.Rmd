@@ -21,7 +21,7 @@ if (params$rendered_by_shiny)
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 library(riskmetric)
 library(magrittr)
 library(dplyr)
@@ -30,6 +30,13 @@ library(prettydoc)
 library(dplyr)
 library(oysteR)
 require(data.table)
+library(boot)
+library(Hmisc)
+library(clustMixType)
+library(cranlogs)
+library(rvest)
+library(lubridate)
+library(adjustedcranlogs)
 
 package_list <- as.data.frame(c(params$pkg)) 
 package_list <- package_list %>% filter(!`c(params$pkg)` %in% 'ggplot2') %>%   
@@ -42,6 +49,9 @@ package_list <- rbind(package_list,helper_tab)
 ```
 
 
+## Purpose 
+
+The purpose of this markdown is to test a handful of packages and functions for proper execution in the environment. 
 
 ## Packages contained in report
 
@@ -62,8 +72,9 @@ mran_pkg <- as.data.frame(mran_pkg)
 
 db <- tools::CRAN_package_db()
 colnames(db)
-mdf <- data.frame(db[,1], db[,53])
-colnames(mdf) <- c("Package", "Title")
+mdf <- data.frame(db[,1], db[,53],db[,17])
+colnames(mdf) <- c("Package", "Description", "Author")
+
 
 tab1 <- left_join(mran_pkg, mdf, by = "Package")
 
@@ -90,6 +101,34 @@ if (params$rendered_by_shiny)
   shiny::setProgress(0.30)  # set progress to 25%
 
 ```
+
+### Number of Times Downloaded from CRAN
+
+```{r echo=FALSE}
+
+mypkgdownloads = adj_cran_downloads(params$pkg,from = "2020-01-01" , to = Sys.Date())
+
+mypkgdownloads <- mypkgdownloads %>%
+mutate(month = format(date, "%m"), year = format(date, "%Y"))  
+
+
+year_tab <- mypkgdownloads %>% select(year, package, adjusted_total_downloads) %>% 
+  filter(!package %in% 'ggplot2') %>%
+  pivot_wider(names_from = package, values_from = adjusted_total_downloads, values_fn=sum)
+
+
+datatable(year_tab, 
+          rownames = TRUE,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all", 
+                                   scrollX='400px',
+                                   rownames= FALSE))
+            )
+          )
+
+
+```
+
 ### About
 
 The [`riskmetric`](https://github.com/pharmaR/riskmetric) package is a collection of risk metrics to evaluate the quality of R packages. The risk of using an R package is evaluated based on a number of metrics meant to evaluate development best practices, code documentation, community engagement and development sustainability. 

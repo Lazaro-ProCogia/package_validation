@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+library(tidyverse)
 
 mran_url <- 'https://mran.revolutionanalytics.com/snapshot/2021-11-08'
 mran_pkg <- as.data.frame(available.packages(repos = mran_url))
@@ -32,8 +33,8 @@ ui <- dashboardPage(
     div(style="text-align:center", br()),
     div(style="text-align:center", br()),
     div(style="text-align:center", br()),
-    div(style="text-align:center", br()),
-    HTML(paste0('<center>','<img src="https://i.ibb.co/8jyykmR/procogia-vertical-light-bg-1.png" style="height: 100px; width:200px;"/>' , '</center>'))
+    div(style="text-align:center", br())#,
+    #HTML(paste0('<center>','<img src="https://i.ibb.co/8jyykmR/procogia-vertical-light-bg-1.png" style="height: 100px; width:200px;"/>' , '</center>'))
       )
     ),
   dashboardBody(
@@ -78,16 +79,16 @@ ui <- dashboardPage(
           id="box3", height = my_height,
           selectizeInput(
             inputId = "selectedPackages",
-            label = "Note: If package is not in exisiting choices please enter it's name exactly as it would be found in CRAN/MRAN",
+            label = "Note: If a package is not found that means it was published to CRAN/MRAN after the most recent MDRC snapshot",
             #choices = packagesDF$Package,
             choices = NULL,
             selected = NULL,
             multiple = TRUE,
             width = "100%",
             options = list(
-              'plugins' = list('remove_button'),
-              'create' = TRUE,
-              'persist' = TRUE
+              'plugins' = list('remove_button')#,
+              #'create' = TRUE,
+              #'persist' = TRUE
               )
             )
           ),
@@ -147,7 +148,7 @@ server <- function(input, output, session) {
   
   output$cranversion <- renderValueBox({
     valueBox(
-      "CRAN",
+      "MRAN",
       "Snapshot 2021-11-08",
       icon = icon("r-project")
     )
