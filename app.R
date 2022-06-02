@@ -48,7 +48,7 @@ ui <- dashboardPage(
     
     
     fluidRow(
-      box(title = "Ticket Numbers", status = "primary", solidHeader = TRUE, 
+      box(title = "Ticket Number and RTU Outcome", status = "primary", solidHeader = TRUE, 
           id="box1", height = my_height,
           selectizeInput( 
             inputId = "ticketnumbers",
@@ -62,13 +62,17 @@ ui <- dashboardPage(
               'create' = TRUE,
               'persist' = TRUE
             )
-          )
+          ),
+          textAreaInput("caption3", "Package Approval for FEDRAMP:", "No Notes Entered", height = "40px" ,width = "1000px"),
       ),
       
       
-      box(title = "Ivanti Ticket Number (if applicable)", status = "primary", solidHeader = TRUE, 
+      box(title = "Additional Notes:", status = "danger", solidHeader = TRUE, 
           id="box2", height = my_height,
-          textOutput("ticket_output" ))
+          textAreaInput("caption1", "About the Author:", "No Notes Entered", width = "1000px", height = "40px" ),
+          textAreaInput("caption2", "Useful Functions:", "No Notes Entered", width = "1000px", height = "40px"),
+          
+                             )
     ),
     
     spsComps::heightMatcher("box2", "box1"),
@@ -96,7 +100,7 @@ ui <- dashboardPage(
 
         box(title = "Packages Selected", status = "info", solidHeader = TRUE,
             id="box4", height = my_height,
-            textOutput("caption")),
+            textOutput("captionpckg")),
       
       spsComps::heightMatcher("box4", "box3")
         ),
@@ -128,7 +132,7 @@ server <- function(input, output, session) {
                        choices = c(packagesDF$Package), server = TRUE)
   
   
-  output$caption <- renderText({
+  output$captionpckg <- renderText({
     paste0(input$selectedPackages, collapse = ", ")
   })
   
@@ -145,6 +149,17 @@ server <- function(input, output, session) {
     input$ticketnumbers
   })
   
+  value1 <- reactive({
+    input$caption1 
+  })
+  
+  value2 <- reactive({
+    input$caption2 
+  })
+  
+  value3 <- reactive({
+    input$caption3 
+  })
   
   output$cranversion <- renderValueBox({
     valueBox(
@@ -194,6 +209,9 @@ server <- function(input, output, session) {
       rmarkdown::render("validation_report.Rmd", output_file = file,
                         params = list(pkg = packages(),
                                       ticket = tickets(),
+                                      author = value1(),
+                                      outcome = value3(),
+                                      functions = value2(),
                                       rendered_by_shiny = TRUE), # here I'm passing data in params
                         envir = new.env(parent = globalenv()),clean=F,encoding="utf-8"
       )

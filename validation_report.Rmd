@@ -8,6 +8,9 @@ params:
   snapshot_date: '2021-11-08'
   pkg: [some object]
   ticket: [some number]  
+  outcome: [some outcome]
+  author: [some author]
+  functions: [some functions]
   rendered_by_shiny: FALSE
 ---
 
@@ -104,7 +107,7 @@ if (params$rendered_by_shiny)
 
 ### Number of Times Downloaded from CRAN
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 mypkgdownloads = adj_cran_downloads(params$pkg,from = "2020-01-01" , to = Sys.Date())
 
@@ -114,7 +117,8 @@ mutate(month = format(date, "%m"), year = format(date, "%Y"))
 
 year_tab <- mypkgdownloads %>% select(year, package, adjusted_total_downloads) %>% 
   filter(!package %in% 'ggplot2') %>%
-  pivot_wider(names_from = package, values_from = adjusted_total_downloads, values_fn=sum)
+  pivot_wider(names_from = package, values_from = adjusted_total_downloads, values_fn=sum) %>% 
+   mutate_each(funs(prettyNum(., big.mark=",")))
 
 
 datatable(year_tab, 
@@ -274,6 +278,22 @@ datatable(tab4, escape = FALSE, rownames = TRUE,
         
 ```      
 
+
+### RTU Outcome and Notes
+
+**About Author**
+
+`r params$author`
+
+
+**Functions most likely to be used**:
+
+`r params$functions`
+
+
+**Approved for FedRAMP**?
+
+`r params$outcome`
 
 ```{r include=FALSE}
 

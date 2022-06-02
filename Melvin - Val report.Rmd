@@ -1,0 +1,61 @@
+---
+title: "Package Review - TraMineR"
+author: "Melvin Gutierrez"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: pdf_document
+---
+
+```{r, include=FALSE}
+# Turning off code chunks for report
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE, message = FALSE)
+```
+
+```{r}
+# Package Name
+Package <- "TraMineR"
+
+library(cranlogs)
+library(rvest)
+library(tidyverse)
+library(lubridate)
+
+total_downloads <- sum(cran_downloads(packages=Package, from="2010-01-01", to=Sys.Date())$count)
+
+crantable <- 
+  read_html(paste0("https://cran.r-project.org/package=", Package)) %>% 
+  html_node("table") %>% 
+  html_table()
+
+```
+
+This is the package review document for the **`r Package`** package. 
+
+**Package Author(s)**: `r crantable %>% filter(X1 == "Author:") %>% select(X2)`  
+
+**Downloads**: `r formatC(total_downloads, big.mark = ",", format = "d")`  
+
+**Number of times updated by year**:
+
+```{r}
+read_html(paste0("https://cran.r-project.org/src/contrib/Archive/", Package)) %>% 
+  html_node("table") %>% 
+  html_table() %>% 
+  janitor::clean_names() %>% 
+  mutate(update = parse_date_time(last_modified, "Ymd HM"),
+         year = year(update)) %>% 
+  filter(!is.na(year)) %>% 
+  count(year) %>% 
+  gt::gt()
+  
+```
+
+**System Dependencies**: `r crantable %>% filter(X1 == "SystemRequirements:") %>% select(X2)`
+
+**About Author(s)**: Gilbert Ritschard (author and maintainer) is Professor Emeritus (professor honoraire) of the University of Geneva Institute of Demography and Socioeconomics. The University of Geneva Institute of Demography and Socioeconomics, more broadly, is the maintainer for the package. 
+
+**Package Use Case**: Analysis for categorical longitudinal data, such as event data. 
+
+**Functions most likely to be used**: `seqdef()`, `seqdplot()`, `seqdist()`, 
+
+**Approved for FedRAMP**? **Why**? Yes. Only a C++11 dependency, reputable developer, and useful results for analysis.  
+
